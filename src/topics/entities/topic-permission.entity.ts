@@ -7,7 +7,7 @@ import {
     CreateDateColumn,
     JoinColumn,
 } from 'typeorm';
-import { Topic } from './topics.entity';
+import { Topic } from './topic.entity';
 import { User } from 'src/users/entities/user.entity';
 import { TopicPermissionType } from 'src/common/types/topic';
 

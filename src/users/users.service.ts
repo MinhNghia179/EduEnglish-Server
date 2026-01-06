@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
-import { Topic } from 'src/topics/entities/topics.entity';
+import { Topic } from 'src/topics/entities/topic.entity';
 import { TopicPermission } from 'src/topics/entities/topic-permission.entity';
 
 @Injectable()

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
-import { Topic } from './topics/entities/topics.entity';
+import { Topic } from './topics/entities/topic.entity';
 import { User } from './users/entities/user.entity';
 import { TopicPermission } from './topics/entities/topic-permission.entity';
 

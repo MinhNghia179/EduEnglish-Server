@@ -1,5 +1,5 @@
 import { TopicPermission } from 'src/topics/entities/topic-permission.entity';
-import { Topic } from 'src/topics/entities/topics.entity';
+import { Topic } from 'src/topics/entities/topic.entity';
 import {
   Column,
   CreateDateColumn,
