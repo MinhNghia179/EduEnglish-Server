@@ -17,5 +17,5 @@ export class ChangePasswordDto {
         "New password isn't strong enough. It must contain at least 8 characters, 1 lowercase letter, 1 uppercase letter, 1 number, and 1 symbol.",
     },
   )
-  password: string;
+  newPassword: string;
 }

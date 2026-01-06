@@ -3,7 +3,7 @@ import { CreateTopicDto } from './dto/create-topic.dto';
 import { UpdateTopicDto } from './dto/update-topic.dto';
 
 @Injectable()
-export class TopicService {
+export class TopicsService {
   create(createTopicDto: CreateTopicDto) {
     return 'This action adds a new topic';
   }

@@ -7,13 +7,13 @@ import {
   Param,
   Delete,
 } from '@nestjs/common';
-import { TopicService } from './topic.service';
+import { TopicsService } from './topics.service';
 import { CreateTopicDto } from './dto/create-topic.dto';
 import { UpdateTopicDto } from './dto/update-topic.dto';
 
 @Controller('topic')
-export class TopicController {
-  constructor(private readonly topicService: TopicService) {}
+export class TopicsController {
+  constructor(private readonly topicService: TopicsService) { }
 
   @Post()
   create(@Body() createTopicDto: CreateTopicDto) {

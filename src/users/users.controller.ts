@@ -13,40 +13,47 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';
 import { AuthGuard } from 'src/common/guards/auth.guard';
-import { Users } from './entities/user.entity';
+import { IUser, IUserFull } from './interfaces';
+import { toUserFull, toUserResponse } from './transformers';
 
 @Controller('users')
 @UseGuards(AuthGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto): Promise<IUser> {
+    const user = await this.usersService.create(createUserDto);
+    return toUserResponse(user);
   }
 
   @Get()
-  async getAllUsers() {
-    return await this.usersService.findAll();
+  async getAllUsers(): Promise<IUser[]> {
+    const users = await this.usersService.getAllUsers();
+    return users.map(toUserResponse);
   }
 
   @Get('me')
-  async getMe(@Req() req: Request & { user: { id: number } }): Promise<Users> {
-    return await this.usersService.getMe(req.user.id);
+  async getMe(@Req() req: Request & { user: { id: string } }): Promise<IUserFull> {
+    const user = await this.usersService.getMe(req.user.id);
+    return toUserFull(user);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+  @Get('profile/:id')
+  async findOne(@Param('id') id: string): Promise<IUser> {
+    const user = await this.usersService.getUserById(id);
+    return toUserResponse(user);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  @Patch('profile/:id')
+  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto): Promise<IUser> {
+    const user = await this.usersService.update(id, updateUserDto);
+    return toUserResponse(user);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  @Delete('profile/:id')
+  remove(@Param('id') id: string): Promise<void> {
+    return this.usersService.remove(id);
   }
 }
+

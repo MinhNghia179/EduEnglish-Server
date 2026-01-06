@@ -1,14 +1,13 @@
-import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Users } from './users/entities/user.entity';
-import { Vocabulary } from './vocabulary/entities/vocabulary.entity';
-import { Topic } from './topic/entities/topic.entity';
-import { Quiz } from './quiz/entities/quiz.entity';
+import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
+import { Topic } from './topics/entities/topics.entity';
+import { User } from './users/entities/user.entity';
+import { TopicPermission } from './topics/entities/topic-permission.entity';
 
 @Injectable()
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
-  constructor(private configService: ConfigService) {}
+  constructor(private configService: ConfigService) { }
 
   createTypeOrmOptions(): TypeOrmModuleOptions {
     return {
@@ -18,7 +17,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
       username: this.configService.get<string>('DB_USER'),
       password: this.configService.get<string>('DB_PASSWORD'),
       database: this.configService.get<string>('DB_NAME'),
-      entities: [Users, Vocabulary, Topic, Quiz],
+      entities: [User, Topic, TopicPermission],
       synchronize: true,
     };
   }

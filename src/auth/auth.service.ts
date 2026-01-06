@@ -13,6 +13,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { MailService } from 'src/mail/mail.service';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { UserDto } from 'src/users/dto/user.dto';
 
 @Injectable()
 export class AuthService {
@@ -21,14 +22,14 @@ export class AuthService {
     private usersService: UsersService,
     private configService: ConfigService,
     private mailService: MailService,
-  ) {}
+  ) { }
 
   generateOtpCode(): string {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
   async generateTokens(
-    userId: number,
+    userId: string,
     email: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const payload = { sub: userId, email };
@@ -45,11 +46,7 @@ export class AuthService {
     email: string,
     password: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
-    const user = await this.usersService.findByEmail(email);
-
-    if (!user) {
-      throw new UnauthorizedException("User doesn't exist");
-    }
+    const user = await this.usersService.getUserByEmail(email);
 
     if (!user.isActive) {
       throw new UnauthorizedException(
@@ -60,7 +57,7 @@ export class AuthService {
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException("Password doesn't match");
+      throw new UnauthorizedException('Your password is incorrect. Try again');
     }
 
     const { accessToken, refreshToken } = await this.generateTokens(
@@ -73,8 +70,8 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async register(registerPayload: RegisterDto) {
-    const existingUser = await this.usersService.findByEmail(
+  async register(registerPayload: RegisterDto): Promise<UserDto> {
+    const existingUser = await this.usersService.checkUserExists(
       registerPayload.email,
     );
 
@@ -112,7 +109,7 @@ export class AuthService {
     token: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     // Verify JWT token first
-    let payload: { sub: number; email: string };
+    let payload: { sub: string; email: string };
     try {
       payload = await this.jwtService.verifyAsync(token);
     } catch {
@@ -120,11 +117,7 @@ export class AuthService {
     }
 
     const userId = payload.sub;
-    const user = await this.usersService.findOne(userId);
-
-    if (!user) {
-      throw new UnauthorizedException("User doesn't exist");
-    }
+    const user = await this.usersService.getUserById(userId);
 
     // Compare token with stored hash (correct order: plaintext, hash)
     const isMatch = await bcrypt.compare(token, user.refreshToken);
@@ -145,12 +138,8 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async changePassword(payload: ChangePasswordDto, userId: number) {
-    const user = await this.usersService.findOne(userId);
-
-    if (!user) {
-      throw new UnauthorizedException("User doesn't exist");
-    }
+  async changePassword(payload: ChangePasswordDto, userId: string) {
+    const user = await this.usersService.getUserById(userId);
 
     const isPasswordValid = await bcrypt.compare(
       payload.oldPassword,
@@ -162,7 +151,7 @@ export class AuthService {
     }
 
     const salt = bcrypt.genSaltSync();
-    const newHashedPassword = await bcrypt.hash(payload.password, salt);
+    const newHashedPassword = await bcrypt.hash(payload.newPassword, salt);
 
     await this.usersService.update(userId, {
       passwordHash: newHashedPassword,
@@ -171,8 +160,8 @@ export class AuthService {
     return { message: 'Password changed successfully' };
   }
 
-  async resetPassword(payload: ResetPasswordDto) {
-    let payloadToken: { sub: number; email: string };
+  async resetPassword(payload: ResetPasswordDto): Promise<void> {
+    let payloadToken: { sub: string; email: string };
 
     try {
       payloadToken = await this.jwtService.verifyAsync(payload.token);
@@ -180,11 +169,7 @@ export class AuthService {
       throw new ForbiddenException('Invalid or expired reset token');
     }
 
-    const user = await this.usersService.findOne(payloadToken.sub);
-
-    if (!user) {
-      throw new UnauthorizedException("User doesn't exist");
-    }
+    const user = await this.usersService.getUserById(payloadToken.sub);
 
     const salt = bcrypt.genSaltSync();
     const newHashedPassword = await bcrypt.hash(payload.password, salt);
@@ -195,10 +180,13 @@ export class AuthService {
   }
 
   async forgotPassword(payload: ForgotPasswordDto) {
-    const user = await this.usersService.findByEmail(payload.email);
+    const user = await this.usersService.getUserByEmail(payload.email);
 
     if (!user) {
-      throw new UnauthorizedException("User doesn't exist");
+      return {
+        message:
+          'If the email exists in our system, you will receive a password reset link',
+      };
     }
 
     const token = await this.jwtService.signAsync(
@@ -214,23 +202,24 @@ export class AuthService {
       template: 'reset-password',
       context: { name: user.fullName, link },
     });
+
+    return {
+      message:
+        'If the email exists in our system, you will receive a password reset link',
+    };
   }
 
-  async clearOtpCode(userId: number): Promise<void> {
+  async clearOtpCode(userId: string): Promise<void> {
     await this.usersService.update(userId, {
-      otpCode: undefined,
-      otpExpiredAt: undefined,
+      otpCode: null,
+      otpExpiredAt: null,
     });
   }
 
   async verifyOtp(payload: VerifyOtpDto) {
-    const user = await this.usersService.findByEmail(payload.email);
+    const user = await this.usersService.getUserByEmail(payload.email);
 
-    if (!user) {
-      throw new UnauthorizedException("User doesn't exist");
-    }
-
-    if (user.otpCode === undefined || user.otpExpiredAt === undefined) {
+    if (!user.otpCode || !user.otpExpiredAt) {
       throw new UnauthorizedException('Try to login first');
     }
 
@@ -249,7 +238,7 @@ export class AuthService {
     });
   }
 
-  async logout(userId: number): Promise<void> {
+  async logout(userId: string): Promise<void> {
     await this.usersService.update(userId, { refreshToken: undefined });
   }
 }

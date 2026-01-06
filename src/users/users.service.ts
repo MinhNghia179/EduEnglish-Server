@@ -1,43 +1,31 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
-import { Users } from './entities/user.entity';
+import { User } from './entities/user.entity';
+import { Topic } from 'src/topics/entities/topics.entity';
+import { TopicPermission } from 'src/topics/entities/topic-permission.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(Users)
-    private userRepository: Repository<Users>,
-    private configService: ConfigService,
-  ) {}
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+  ) { }
 
-  async findByEmail(email: string): Promise<Users | null> {
-    return await this.userRepository.findOne({ where: { email } });
-  }
-
-  async findOne(id: number): Promise<Users | null> {
-    return await this.userRepository.findOne({ where: { id } });
-  }
-
-  async findAll(): Promise<Users[]> {
-    return await this.userRepository.find();
-  }
-
-  async create(user: Partial<Users>): Promise<Users> {
+  async create(user: Partial<User>): Promise<User> {
     return await this.userRepository.save(user);
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     await this.userRepository.delete(id);
   }
 
-  async update(id: number, dto: Partial<Users>): Promise<Users> {
+  async update(id: string, dto: Partial<User>): Promise<User> {
     return await this.userRepository.save({ id, ...dto });
   }
 
-  async updateRefreshToken(userId: number, token: string): Promise<void> {
+  async updateRefreshToken(userId: string, token: string): Promise<void> {
     const salt = bcrypt.genSaltSync();
 
     const hashed = await bcrypt.hash(token, salt);
@@ -45,11 +33,68 @@ export class UsersService {
     await this.userRepository.update(userId, { refreshToken: hashed });
   }
 
-  async getMe(userId: number): Promise<Users> {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
+  async getMe(userId: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['topics', 'topicPermissions']
+    });
 
     if (!user) throw new UnauthorizedException('User not found');
 
     return user;
+  }
+
+  async getTopics(userId: string): Promise<Topic[]> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['topics', 'topicPermissions']
+    });
+
+    if (!user) throw new UnauthorizedException('User not found');
+
+    return user.topics;
+  }
+
+  async getTopicPermissions(userId: string): Promise<TopicPermission[]> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['topics', 'topicPermissions']
+    });
+
+    if (!user) throw new UnauthorizedException('User not found');
+
+    return user.topicPermissions;
+  }
+
+  async getUserById(userId: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) throw new UnauthorizedException('User not found');
+
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { email },
+    });
+
+    if (!user) throw new UnauthorizedException('User not found');
+
+    return user;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await this.userRepository.find();
+  }
+
+  async checkUserExists(email: string): Promise<boolean> {
+    const user = await this.userRepository.findOne({
+      where: { email },
+    });
+
+    return !!user;
   }
 }

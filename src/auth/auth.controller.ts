@@ -20,7 +20,7 @@ import { AuthGuard } from 'src/common/guards/auth.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('login')
   async loginIn(
@@ -71,38 +71,37 @@ export class AuthController {
   }
 
   @Post('change-password')
+  @UseGuards(AuthGuard)
   changePassword(
     @Body() dto: ChangePasswordDto,
-    @Req() req: Request & { user: { sub: number } },
+    @Req() req: Request & { user: { sub: string } },
   ) {
     return this.authService.changePassword(dto, req.user.sub);
   }
 
   @Post('reset-password')
-  async resetPassword(@Body() dto: ResetPasswordDto): Promise<string> {
+  async resetPassword(@Body() dto: ResetPasswordDto) {
     await this.authService.resetPassword(dto);
-    return 'Password reset successfully';
+    return { message: 'Password reset successfully' };
   }
 
   @Post('forgot-password')
-  async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<string> {
-    await this.authService.forgotPassword(dto);
-    return 'Email sent successfully';
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return await this.authService.forgotPassword(dto);
   }
 
   @Post('verify-otp')
-  async verifyOtp(@Body() dto: VerifyOtpDto): Promise<string> {
+  async verifyOtp(@Body() dto: VerifyOtpDto) {
     await this.authService.verifyOtp(dto);
-    return 'Verified email successfully';
+    return { message: 'Email verified successfully' };
   }
 
   @UseGuards(AuthGuard)
   @Post('logout')
   async logout(
-    @Req() req: Request & { user: { sub: number } },
+    @Req() req: Request & { user: { sub: string } },
     @Res({ passthrough: true }) response: Response,
-  ): Promise<string> {
-    console.log('UserId', req);
+  ) {
     await this.authService.logout(req.user.sub);
 
     response.cookie('refreshToken', '', {
@@ -112,6 +111,6 @@ export class AuthController {
       maxAge: 0,
     });
 
-    return 'Logged out successfully';
+    return { message: 'Logged out successfully' };
   }
 }
