@@ -22,6 +22,7 @@ export class MailerConfigService implements MailerOptionsFactory {
       defaults: {
         from: this.configService.get<string>('EMAIL_SMTP_FROM_NAME'),
       },
+
       template: {
         dir: join(process.cwd(), 'src/common/templates'),
         adapter: new HandlebarsAdapter(),
