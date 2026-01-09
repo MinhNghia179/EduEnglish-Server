@@ -11,6 +11,7 @@ import { MailerConfigService } from './mail';
 import { MailModule } from './mail/mail.module';
 import { TopicsModule } from './topics/topics.module';
 import { UsersModule } from './users/users.module';
+import { ChannelModule } from './channel/channel.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { UsersModule } from './users/users.module';
     AuthModule,
     UsersModule,
     TopicsModule,
+    ChannelModule,
     HistoryModule,
     MailModule,
   ],

@@ -5,6 +5,7 @@ import { UsersModule } from 'src/users/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { MailModule } from 'src/mail/mail.module';
+import { ChannelModule } from 'src/channel/channel.module';
 
 @Module({
   controllers: [AuthController],
@@ -12,6 +13,7 @@ import { MailModule } from 'src/mail/mail.module';
   imports: [
     UsersModule,
     MailModule,
+    ChannelModule,
     JwtModule.registerAsync({
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
@@ -21,4 +23,4 @@ import { MailModule } from 'src/mail/mail.module';
     }),
   ],
 })
-export class AuthModule {}
+export class AuthModule { }

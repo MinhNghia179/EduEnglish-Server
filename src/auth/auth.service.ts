@@ -14,6 +14,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { MailService } from 'src/mail/mail.service';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { UserDto } from 'src/users/dto/user.dto';
+import { ChannelService } from 'src/channel/channel.service';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +23,7 @@ export class AuthService {
     private usersService: UsersService,
     private configService: ConfigService,
     private mailService: MailService,
+    private channelService: ChannelService,
   ) { }
 
   generateOtpCode(): string {
@@ -65,7 +67,6 @@ export class AuthService {
       email,
     );
 
-    await this.usersService.updateRefreshToken(user.id, refreshToken);
 
     return { accessToken, refreshToken };
   }
@@ -94,15 +95,15 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(registerPayload.password, salt);
 
-    const newUser = {
+    const newUser = await this.usersService.create({
       fullName: registerPayload.fullName,
       email: registerPayload.email,
       passwordHash,
       otpCode,
       otpExpiredAt: new Date(Date.now() + 1000 * 60 * 5),
-    };
+    });
 
-    return await this.usersService.create(newUser);
+    return newUser;
   }
 
   async createNewAccessToken(
@@ -233,9 +234,9 @@ export class AuthService {
 
     if (isOtpExpired) throw new UnauthorizedException('OTP is expired');
 
-    await this.usersService.update(user.id, {
-      isActive: true,
-    });
+    await this.usersService.update(user.id, { isActive: true });
+
+    await this.channelService.createMyChannel(user.id);
   }
 
   async logout(userId: string): Promise<void> {

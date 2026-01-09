@@ -1,3 +1,4 @@
+import { Channel } from 'src/channel/entities/channel.entity';
 import { TopicPermission } from 'src/topics/entities/topic-permission.entity';
 import { Topic } from 'src/topics/entities/topic.entity';
 import {
@@ -5,6 +6,7 @@ import {
   CreateDateColumn,
   Entity,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -61,6 +63,9 @@ export class User {
 
   @OneToMany(() => TopicPermission, (topicPermission) => topicPermission.user)
   topicPermissions: TopicPermission[];
+
+  @OneToOne(() => Channel, (channel) => channel.user)
+  channel: Channel;
 
   constructor(partial: Partial<User>) {
     Object.assign(this, partial);

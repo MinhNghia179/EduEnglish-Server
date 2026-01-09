@@ -12,15 +12,15 @@ export class TopicsService {
     return `This action returns all topic`;
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} topic`;
   }
 
-  update(id: number, updateTopicDto: UpdateTopicDto) {
+  update(id: string, updateTopicDto: UpdateTopicDto) {
     return `This action updates a #${id} topic`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} topic`;
   }
 }

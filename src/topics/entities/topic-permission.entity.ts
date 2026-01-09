@@ -20,9 +20,15 @@ export class TopicPermission {
     @JoinColumn({ name: 'topic_id' })
     topic: Topic;
 
+    @Column()
+    topic_id: string;
+
     @ManyToOne(() => User, (user) => user.topicPermissions, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
     user: User;
+
+    @Column()
+    user_id: string;
 
     @Column({ type: 'enum', enum: TopicPermissionType, default: TopicPermissionType.VIEW })
     permission: TopicPermissionType;
